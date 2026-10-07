@@ -23,21 +23,25 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
 
-      - name: Show project files
+      - name: Extract Bird Client
         run: |
-          echo "=== PROJECT FILES ==="
-          find . -maxdepth 3 -type f | sort
-          echo "=== JAVA VERSION ==="
-          java -version
-          echo "=== GRADLE VERSION ==="
-          gradle --version
+          unzip -o bird-client.zip -d bird-client
+
+      - name: Find Gradle project
+        run: |
+          echo "=== GRADLE FILES ==="
+          find bird-client -name "build.gradle*" -o -name "settings.gradle*"
 
       - name: Build Bird Client
-        run: gradle build --no-daemon --stacktrace
+        run: |
+          PROJECT_DIR=$(dirname "$(find bird-client -name settings.gradle -o -name settings.gradle.kts | head -n 1)")
+          echo "Building from: $PROJECT_DIR"
+          cd "$PROJECT_DIR"
+          gradle build --no-daemon --stacktrace
 
       - name: Upload JAR
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: bird-client
-          path: build/libs/*.jar
+          path: "bird-client/**/build/libs/*.jar"
